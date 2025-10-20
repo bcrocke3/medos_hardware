@@ -1,0 +1,8 @@
+<launch>
+    <!-- Include another launch file -->
+    <include file="$(find bebop_driver)/launch/bebop_node.launch" />
+
+    <!-- Start RViz with a saved configuration -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find medos-demo)/config/bebop-cam-config.rviz"/>
+    <node name="target_detector" pkg="medos-demo" type="target_detector.py" output="screen" />
+</launch>

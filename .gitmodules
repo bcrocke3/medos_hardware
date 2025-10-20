@@ -1,0 +1,4 @@
+[submodule "src/bebop_autonomy"]
+	path = src/bebop_autonomy
+	url = git@github.com:bcrocke3/bebop_autonomy.git
+	branch = indigo-devel
