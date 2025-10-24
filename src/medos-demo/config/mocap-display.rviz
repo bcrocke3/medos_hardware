@@ -80,7 +80,7 @@ Visualization Manager:
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
       Shape: Axes
-      Topic: /vrpn_client_node/drone/pose
+      Topic: /vrpn_client_node/bebop/pose
       Unreliable: false
       Value: true
   Enabled: true

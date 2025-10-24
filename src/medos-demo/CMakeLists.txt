@@ -161,7 +161,7 @@ include_directories(
 # Mark executable scripts (Python etc.) for installation
 # in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/go1-pose-filter.py
+  scripts/pose-filter.py
   scripts/bebop_waypoint_controller.py
   scripts/target_detector.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
