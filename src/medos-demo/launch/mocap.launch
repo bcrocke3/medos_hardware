@@ -1,8 +1,9 @@
 <launch>
 
+
   <arg name="server" default="192.168.50.26"/>
 
-  <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
+  <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node">
     <rosparam subst_value="true">
       server: $(arg server)
       port: 3883
@@ -22,7 +23,6 @@
     </rosparam>
   </node>
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find medos-demo)/config/mocap-display.rviz"/>
-
-
+  <node name="go1_pose_filter" pkg="medos-demo" type="go1-pose-filter.py" output="screen"/>
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find medos-demo)/config/mocap-display.rviz"/> -->
 </launch>
