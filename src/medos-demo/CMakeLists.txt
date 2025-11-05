@@ -164,6 +164,7 @@ catkin_install_python(PROGRAMS
   scripts/pose-filter.py
   scripts/bebop_waypoint_controller.py
   scripts/target_detector.py
+  scripts/map_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
