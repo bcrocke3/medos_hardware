@@ -30,6 +30,7 @@ class RosMap:
         data = np.load(file_path)
 
         # flip over y-axis
+        # multiply by 100 bc OccupancyGrid convention is [0,100] probability of occupied with -1 for unknown
         self.map_grid = np.flip(100 * data, axis=1)
 
         self.map_resolution = 0.1 # meters / cell

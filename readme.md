@@ -11,3 +11,4 @@ ROS Melodic (Python 2)
 
 ### Medos-Demo
 - our code
+- Build from scratch will might require `catkin_make` twice

@@ -1,0 +1,7 @@
+<launch>
+
+  <node name="map" pkg="medos_demo" type="map_node.py" output="screen">
+    <param name="map_file_path" value="/home/cairo/medos-demo-ws/src/medos_demo/maps/111A_Nov_3_filled_in.npy" />
+  </node>
+
+</launch>

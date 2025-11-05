@@ -23,14 +23,14 @@
     </rosparam>
   </node>
 
-  <node name="go1_pose_filter" pkg="medos-demo" type="pose-filter.py" output="screen">
+  <node name="go1_pose_filter" pkg="medos_demo" type="pose-filter.py" output="screen">
     <param name="input_topic" value="/vrpn_client_node/go1/pose" />
     <param name="output_topic" value="/cairo_go1/pose" />
   </node>
 
-  <node name="bebop_pose_filter" pkg="medos-demo" type="pose-filter.py" output="screen">
+  <node name="bebop_pose_filter" pkg="medos_demo" type="pose-filter.py" output="screen">
     <param name="input_topic" value="/vrpn_client_node/bebop/pose" />
     <param name="output_topic" value="/cairo_bebop/pose" />
   </node>
-  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find medos-demo)/config/mocap-display.rviz"/> -->
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find medos_demo)/config/mocap-display.rviz"/> -->
 </launch>
