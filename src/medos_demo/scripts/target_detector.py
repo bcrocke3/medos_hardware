@@ -4,18 +4,25 @@ import rospy
 import cv2
 import numpy as np
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, Pose2D, Point
 from cv_bridge import CvBridge, CvBridgeError
+from medos_demo.msg import Target
 
 class ImageTargetDetectorNode:
     def __init__(self):
         # Initialize ROS node
         rospy.init_node('image_target_detector_node', anonymous=True)
 
+        self.DRONE_ALTITUDE = 1.0 # meters
+        self.DRONE_CAMERA_ANGLE = -83.0 # degrees (docs say 83 deg is as far down as it goes)
+
         self.camera_ctrl_pub = rospy.Publisher('/bebop/camera_control', Twist, queue_size=10)
         self.image_sub = rospy.Subscriber('/bebop/image_raw', Image, self.on_receive_raw_image)
-        self.image_pub = rospy.Publisher('/bebop/image_target_detections', Image, queue_size=10)
+        self.pose_sub = rospy.Subscriber('/cairo_bebop/pose', Pose2D, self.on_receive_pose)
+        self.image_pub = rospy.Publisher('image_target_detections', Image, queue_size=10)
+        self.target_detections_pub = rospy.Publisher('target_detections', Target, queue_size=10)
 
+        self.pose = None
         self.bridge = CvBridge()
         self.color_blob_size_threshold = 500 # number of pixels required in blob
 
@@ -31,10 +38,13 @@ class ImageTargetDetectorNode:
         # publish a camera control message to point camera downward
         # rostopic pub --once /bebop/camera_control geometry_msgs/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 10.0, z: 0.0}}'
         downward_viewpoint = Twist()
-        downward_viewpoint.angular.y = -83.0 # degrees (docs say 83 deg is as far is it goes)
+        downward_viewpoint.angular.y = self.DRONE_CAMERA_ANGLE # degrees 
         self.camera_ctrl_pub.publish(downward_viewpoint)
 
         rospy.loginfo("Target Detector Node initialized.")
+
+    def on_receive_pose(self, pose_msg):
+        self.pose = pose_msg
 
     def on_receive_raw_image(self, msg):
         try:
@@ -47,16 +57,23 @@ class ImageTargetDetectorNode:
         # Convert to HSV
         hsv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
 
-        # search for color blobs
-        mask = self._get_target_mask(hsv_image=hsv)
+        for target_color in ["PINK", "GREEN", "YELLOW"]:
 
-        # Find contours
-        _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            # search for color blobs
+            mask = self._get_target_mask(hsv_image=hsv, target_color=target_color)
 
-        for contour in contours:
-            if cv2.contourArea(contour) > self.color_blob_size_threshold:
-                x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(cv_image, (x, y), (x+w, y+h), (0, 0, 255), 2)  # red boxes
+            # Find contours
+            _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            for contour in contours:
+                if cv2.contourArea(contour) > self.color_blob_size_threshold:
+                    self._publish_target_detection(target_color=target_color)
+
+                    # find the bounding box
+                    x, y, w, h = cv2.boundingRect(contour)
+
+                    # draw bounding box on original img
+                    cv2.rectangle(cv_image, (x, y), (x+w, y+h), (0, 0, 255), 2)  # red boxes
 
         # Convert back to ROS Image message and publish
         try:
@@ -65,7 +82,7 @@ class ImageTargetDetectorNode:
         except CvBridgeError as e:
             rospy.logerr("CvBridge Error: %s", str(e))
 
-    def _get_target_mask(self, hsv_image):
+    def _get_target_mask(self, hsv_image, target_color=None):
 
         neon_pink_lower = np.array([130, 50, 50])
         neon_pink_upper = np.array([175, 255, 255])
@@ -83,7 +100,29 @@ class ImageTargetDetectorNode:
         combined_mask = cv2.bitwise_or(pink_mask, green_mask)
         combined_mask = cv2.bitwise_or(combined_mask, yellow_mask)
 
-        return combined_mask
+        if target_color == "PINK":
+            return pink_mask
+        elif target_color == "GREEN":
+            return green_mask
+        elif target_color == "YELLOW":
+            return yellow_mask
+        else:
+            return combined_mask
+    
+    def _publish_target_detection(self, target_color):
+        
+        # if we don't have pose to publish target location, skip it
+        if self.pose is None:
+            return
+        
+        target_msg = Target()
+        target_msg.label = target_color + " SCIENCE TARGET"
+        target_msg.location = Point()
+        target_msg.location.x = self.pose.x
+        target_msg.location.y = self.pose.y
+        target_msg.location.z = 0.0
+
+        self.target_detections_pub.publish(target_msg)
 
     def run(self):
         rospy.spin()

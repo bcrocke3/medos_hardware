@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /Image2
       Splitter Ratio: 0.4309278428554535
     Tree Height: 240
   - Class: rviz/Selection
@@ -66,7 +67,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /bebop/image_target_detections
+      Image Topic: /cairo_bebop/image_target_detections
       Max Value: 1
       Median window: 5
       Min Value: 0

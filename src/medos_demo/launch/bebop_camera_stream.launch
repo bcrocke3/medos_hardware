@@ -4,5 +4,8 @@
 
     <!-- Start RViz with a saved configuration -->
     <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find medos_demo)/config/bebop-cam-config.rviz"/> -->
-    <node name="target_detector" pkg="medos_demo" type="target_detector.py" output="screen" />
+    
+    <group ns="cairo_bebop">
+        <node name="target_detector" pkg="medos_demo" type="target_detector.py" output="screen" />
+    </group>
 </launch>
