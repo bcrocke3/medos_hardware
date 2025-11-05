@@ -1,0 +1,9 @@
+<launch>
+
+    <group ns="cairo_go1">
+        <node name="dummy_planner" pkg="medos_demo" type="go1_dummy_path_planner.py" output="screen">
+        <rosparam file="$(find medos_demo)/maps/paths.yaml" command="load" />
+        </node>
+    </group>
+
+</launch>

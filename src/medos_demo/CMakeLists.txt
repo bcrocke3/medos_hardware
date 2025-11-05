@@ -131,6 +131,7 @@ catkin_install_python(PROGRAMS
   scripts/bebop_waypoint_controller.py
   scripts/target_detector.py
   scripts/map_node.py
+  scripts/go1_dummy_path_planner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
