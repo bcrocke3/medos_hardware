@@ -35,8 +35,8 @@ class RosMap:
 
         self.map_resolution = 0.1 # meters / cell
         self.map_origin = Pose()
-        self.map_origin.position.x = -2.0
-        self.map_origin.position.y = -1.5
+        self.map_origin.position.x = -2.42
+        self.map_origin.position.y = -1.215
         self.map_origin.position.z = 0.0
         self.map_origin.orientation.x = 0.0
         self.map_origin.orientation.y = 0.0
