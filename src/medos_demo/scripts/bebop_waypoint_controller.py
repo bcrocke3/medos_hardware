@@ -3,29 +3,30 @@ import rospy
 from geometry_msgs.msg import Twist, Pose2D
 from std_msgs.msg import Empty
 import math
+import datetime 
 from collections import deque
 
 class BebopWaypointController:
     def __init__(self):
         rospy.init_node('bebop_waypoint_controller')
 
-        # self.last_pose_time = None  # Tracks last valid pose message
-        # self.pose_timeout = 1.0     # seconds
+        self.last_pose_time = None  # Tracks last valid pose message
+        self.pose_timeout = rospy.Duration(1.0)     # seconds
 
         self.pose = Pose2D()
         self.waypoints = deque()
 
         # Parameters
         self.distance_tolerance = 0.15  # meters
-        self.angle_tolerance = 0.05     # radians
+        self.angle_tolerance = 0.3     # radians
 
-        self.max_linear_speed = 0.1     # m/s
-        self.max_angular_speed = 0.65   # rad/s
+        self.max_linear_speed = 0.05     # m/s
+        self.max_angular_speed = 0.25   # rad/s
 
         # Control gains
-        self.kp_x = 0.2
-        self.kp_y = 0.2
-        self.kp_theta = 0.6
+        self.kp_x = 0.1
+        self.kp_y = 0.1
+        self.kp_theta = 0.3
 
         self.stopped = False
 
@@ -43,6 +44,7 @@ class BebopWaypointController:
 
     def pose_callback(self, msg):
         self.pose = msg
+        self.last_pose_time = rospy.Time.now()
 
     def waypoint_callback(self, msg):
         rospy.loginfo("Received new waypoint: (%.2f, %.2f, %.2f)", msg.x, msg.y, msg.theta)
@@ -54,6 +56,10 @@ class BebopWaypointController:
 
             if self.stopped:
                 self.waypoints.clear()
+
+            if self.last_pose_time is not None and rospy.Time.now() - self.last_pose_time > self.pose_timeout:
+                self.waypoints.clear()
+                rospy.logwarn("Last pose too stale. Cleared waypoints.")
 
             if self.waypoints:
 

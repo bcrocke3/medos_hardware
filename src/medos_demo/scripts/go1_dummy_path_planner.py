@@ -11,7 +11,7 @@ class DummyPathPlanner:
         
         try:
             # Get the input and output topics from parameters (no default values)
-            self.paths = rospy.get_param('~go1_paths', "")
+            self.paths = rospy.get_param('~paths', "")
 
         except KeyError as e:
             rospy.logerr("Required parameter {} not provided. Shutting down.".format(str(e)))
@@ -23,6 +23,7 @@ class DummyPathPlanner:
 
         
     def _on_receive_goal(self, point_msg):
+        rospy.loginfo("Received a goal {}".format(point_msg))
         goal_x = point_msg.x
         goal_y = point_msg.y
 

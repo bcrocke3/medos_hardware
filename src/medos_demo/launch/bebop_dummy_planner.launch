@@ -1,0 +1,12 @@
+<launch>
+
+    <group ns="cairo_bebop">
+        <node name="bebop_dummy_planner" pkg="medos_demo" type="go1_dummy_path_planner.py" output="screen">
+        <rosparam file="$(find medos_demo)/maps/drone_waypoints.yaml" command="load" />
+        </node>
+    </group>
+
+    <node name="bebop_waypoint_controller" pkg="medos_demo" type="bebop_waypoint_controller.py" output="screen">
+        </node>
+
+</launch>
