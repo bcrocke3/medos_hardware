@@ -49,6 +49,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Target.msg
+  RecapCommand.msg
+  RecapTelemetry.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -70,6 +72,7 @@ generate_messages(
   DEPENDENCIES
   geometry_msgs
   std_msgs
+  medos_demo
 )
 
 ################################################
@@ -132,6 +135,7 @@ catkin_install_python(PROGRAMS
   scripts/target_detector.py
   scripts/map_node.py
   scripts/go1_dummy_path_planner.py
+  scripts/high_level_controller.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
