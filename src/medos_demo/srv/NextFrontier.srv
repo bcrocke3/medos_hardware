@@ -1,0 +1,4 @@
+
+---
+bool frontierExists
+geometry_msgs/Point frontierPoint
