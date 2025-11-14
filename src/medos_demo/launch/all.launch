@@ -1,0 +1,19 @@
+<launch>
+    
+    <!-- Include rosbridge server -->
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+        <!-- Optional: override parameters -->
+        <arg name="port" value="9090"/>
+        <arg name="authenticate" value="false"/>
+    </include>
+
+    <!-- Mocap -->
+    <include file="$(find medos_demo)/launch/mocap.launch"/>
+
+    <!-- BEBOP -->
+    <!-- <include file="$(find medos_demo)/launch/bebop_all.launch"/> -->
+
+    <!-- Go1 -->
+    <!-- <include file="$(find medos_demo)/launch/go1_all.launch"/> -->
+
+</launch>

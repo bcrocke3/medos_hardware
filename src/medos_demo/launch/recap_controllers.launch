@@ -7,11 +7,11 @@
         <arg name="authenticate" value="false"/>
     </include>
 
-    <group ns="cairo_go1">
+    <!-- <group ns="cairo_go1">
         <node name="go1_high_level_controller" pkg="medos_demo" type="high_level_controller.py" output="screen">
             <param name="agent_type" value="SCIENTIST" />
         </node>
-    </group>
+    </group> -->
 
     <group ns="cairo_bebop">
         <node name="bebop_high_level_controller" pkg="medos_demo" type="high_level_controller.py" output="screen">

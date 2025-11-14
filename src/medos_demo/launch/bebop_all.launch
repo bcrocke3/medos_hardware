@@ -1,0 +1,32 @@
+<launch>
+    <!-- The bebop autonomy stack -->
+    <include file="$(find bebop_driver)/launch/bebop_node.launch" />
+
+    <!-- Start RViz with a saved configuration -->
+    <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find medos_demo)/config/bebop-cam-config.rviz"/> -->
+    
+    <!-- Waypoint Controller (waypoints -> cmd_vel) -->
+    <!-- TODO: should probs move this to be in bebop namespace, but idk if it will break. Investigate later -->
+    <node name="bebop_waypoint_controller" pkg="medos_demo" type="bebop_waypoint_controller.py"/>
+
+    <group ns="cairo_bebop">
+        <!-- Ccomputer Vision for target detection -->
+        <node name="target_detector" pkg="medos_demo" type="target_detector.py"/>
+    
+        <!-- Dummy path planner for bebop (goals -> waypoints) -->
+        <node name="bebop_dummy_planner" pkg="medos_demo" type="go1_dummy_path_planner.py">
+            <rosparam file="$(find medos_demo)/maps/drone_waypoints.yaml" command="load" />
+        </node>
+
+        <!-- Frontier explorer for bebop (explore command -> goal points) -->
+        <node name="bebop_dummy_frontier_explorer" pkg="medos_demo" type="frontier_finder.py" output="screen">
+            <rosparam file="$(find medos_demo)/maps/drone_frontier_list.yaml" command="load" />
+        </node>
+
+        <!-- High level controller for bebop (Recap commands -> all the other nodes) -->
+        <node name="bebop_high_level_controller" pkg="medos_demo" type="high_level_controller.py" output="screen">
+            <param name="agent_type" value="SCOUT" />
+        </node>
+
+    </group>
+</launch>

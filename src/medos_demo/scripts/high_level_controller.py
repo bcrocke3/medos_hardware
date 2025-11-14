@@ -42,23 +42,7 @@ class HighLevelController:
         elif self.agent_type == AgentType.SCIENTIST:
             self.namespace = 'cairo_go1/'
 
-        # ROS pub/sub
-        rospy.Subscriber('command', RecapCommand, self.onRecapCommandReceived)
-        rospy.Subscriber('pose', Pose2D, self.onPoseReceived)
-        rospy.Subscriber('done_with_science', Empty, self.onDoneWithScienceReceived)
-        rospy.Subscriber('detected_target', Target, self.onDetectedTargetReceived)
-        # rospy.Subscriber('frontier_goals', Point, self.onFrontierGoalsReceived)
-        self.telemetry_publisher = rospy.Publisher('telemetry', RecapTelemetry, queue_size=20)
-        self.go_wait_publisher = rospy.Publisher('go_wait', Int32, queue_size=10)
-        self.goals_publisher = rospy.Publisher('goals', Point, queue_size=10)
-        # self.explore_publisher = rospy.Publisher('explore', Empty, queue_size=10)
-
-        self.next_frontier_service = rospy.ServiceProxy('next_frontier', NextFrontier)
-        rospy.Timer(rospy.Duration(0.1), self.publishTelemetry)
-
-        rospy.loginfo("Node initialized. Agent type: " + str(self.agent_type))
-
-        # States
+                # States
         self.position = Pose2D()
         self.detected_targets = []
         # self.done_exploring = False
@@ -73,10 +57,28 @@ class HighLevelController:
         self.current_frontier_goal = None
         self.current_navigation_goal = None
         self.current_science_target = None
+
+        self.previous_behavior = None
+
+        # ROS pub/sub
+        rospy.Subscriber('command', RecapCommand, self.onRecapCommandReceived)
+        rospy.Subscriber('pose', Pose2D, self.onPoseReceived)
+        rospy.Subscriber('done_with_science', Empty, self.onDoneWithScienceReceived)
+        rospy.Subscriber('target_detections', Target, self.onDetectedTargetReceived)
+        # rospy.Subscriber('frontier_goals', Point, self.onFrontierGoalsReceived)
+        self.telemetry_publisher = rospy.Publisher('telemetry', RecapTelemetry, queue_size=20)
+        self.go_wait_publisher = rospy.Publisher('go_wait', Int32, queue_size=10)
+        self.goals_publisher = rospy.Publisher('goals', Point, queue_size=10)
+        # self.explore_publisher = rospy.Publisher('explore', Empty, queue_size=10)
+
+        self.next_frontier_service = rospy.ServiceProxy('next_frontier', NextFrontier)
+        rospy.Timer(rospy.Duration(1.0), self.publishTelemetry)
+
+        rospy.loginfo("Node initialized. Agent type: " + str(self.agent_type))
     
     def publishTelemetry(self, event):
         telemetry_msg = RecapTelemetry()
-        telemetry_msg.position = self.position
+        telemetry_msg.position = [self.position.x, self.position.y]
         telemetry_msg.detectedTargets = self.detected_targets
         telemetry_msg.hasFoundAllFrontiers = self.hasFoundAllFrontiers
         telemetry_msg.hasReachedCurrentFrontier = self.hasReachedCurrentFrontier
@@ -84,15 +86,25 @@ class HighLevelController:
         telemetry_msg.hasFinishedAnalyzingTarget = self.done_with_science
         telemetry_msg.systemStatus = self.system_status
 
+        if len(self.detected_targets) > 0:
+            print("Detected targets:")
+            for target in self.detected_targets:
+                print(" - {} at {}".format(target.label, target.location))
+
         self.telemetry_publisher.publish(telemetry_msg)
 
     def onRecapCommandReceived(self, msg):
         if msg.behavior == RecapCommand.NOCHANGE:
             print("No change")
+            self.previous_behavior = RecapCommand.NOCHANGE
         elif msg.behavior == RecapCommand.IDLE:
             print("Idle")
             self.publish_wait()
+            self.previous_behavior = RecapCommand.IDLE
         elif msg.behavior == RecapCommand.EXPLORE:
+            if self.previous_behavior == RecapCommand.EXPLORE:
+                print("Already exploring, treating as no change")
+                return
             print("Explore")
             self.hasFoundAllFrontiers = False
             self.handleNextFrontier()
@@ -101,10 +113,12 @@ class HighLevelController:
             print("Analyze Target")
             self.done_with_science = False
             self.current_science_target = msg.target.location
+            self.previous_behavior = RecapCommand.ANALYZE_TARGET
             self.publish_wait()
             self.waitForScience()
         elif msg.behavior == RecapCommand.GOTO_TARGET:
             print("Go to Target:", msg.target)
+            self.previous_behavior = RecapCommand.GOTO_TARGET
             self.current_navigation_goal = msg.target.location
             self.reached_navigation_target = None
             self.goals_publisher.publish(msg.target.location)
@@ -148,9 +162,10 @@ class HighLevelController:
             self.current_frontier_goal = frontier
             self.goals_publisher.publish(self.current_frontier_goal)
     
-    def check_if_reached_goal(self, goal, current_position):
+    @staticmethod
+    def check_if_reached_goal(goal, current_position):
         if goal is None:
-            return True
+            return False
         distance = math.sqrt((goal.x - current_position.x) ** 2 +
                              (goal.y - current_position.y) ** 2)
         threshold = 0.15  # meters
@@ -160,11 +175,11 @@ class HighLevelController:
         self.position = msg
         # Note: only checking navigation goals for scientist; as implemented, scout never has navigation goals
         if self.agent_type == AgentType.SCIENTIST:
-            goal_reached = self.check_if_reached_goal(self.current_navigation_goal, self.position)
+            goal_reached = HighLevelController.check_if_reached_goal(self.current_navigation_goal, self.position)
             if goal_reached:
                 self.reached_navigation_target = True
         elif self.agent_type == AgentType.SCOUT:
-            goal_reached = self.check_if_reached_goal(self.current_frontier_goal, self.position)
+            goal_reached = HighLevelController.check_if_reached_goal(self.current_frontier_goal, self.position)
             if goal_reached:
                 self.hasReachedCurrentFrontier = True
             # if goal_reached:
@@ -175,6 +190,15 @@ class HighLevelController:
         self.done_with_science = True
 
     def onDetectedTargetReceived(self, msg):
+        target_label = msg.label
+
+        # check if we've already detected this target
+        # if so, do not add it again
+        for target in self.detected_targets:
+            if target.label == target_label:
+                return
+        
+        # we haven't detected this target before, add it to the list
         self.detected_targets.append(msg)
 
     def run_node(self):

@@ -12,6 +12,7 @@ class BebopWaypointController:
 
         self.last_pose_time = None  # Tracks last valid pose message
         self.pose_timeout = rospy.Duration(1.0)     # seconds
+        self.printed_stale_warning = False
 
         self.pose = Pose2D()
         self.waypoints = deque()
@@ -40,11 +41,14 @@ class BebopWaypointController:
 
     def stop_callback(self, msg):
         self.stopped = True
-        self.waypoints.clear()
+        # self.waypoints.clear()
 
     def pose_callback(self, msg):
         self.pose = msg
         self.last_pose_time = rospy.Time.now()
+        if self.printed_stale_warning:
+            rospy.loginfo("Received new pose data. Clearing stale warning.")
+            self.printed_stale_warning = False
 
     def waypoint_callback(self, msg):
         rospy.loginfo("Received new waypoint: (%.2f, %.2f, %.2f)", msg.x, msg.y, msg.theta)
@@ -55,11 +59,17 @@ class BebopWaypointController:
         while not rospy.is_shutdown():
 
             if self.stopped:
-                self.waypoints.clear()
+                # self.waypoints.clear()
+                cmd = Twist()
+                self.cmd_pub.publish(cmd)
 
             if self.last_pose_time is not None and rospy.Time.now() - self.last_pose_time > self.pose_timeout:
-                self.waypoints.clear()
-                rospy.logwarn("Last pose too stale. Cleared waypoints.")
+                # self.waypoints.clear()
+                if not self.printed_stale_warning:
+                    rospy.logwarn("Pose data is stale. No valid pose received for %.2f seconds.", self.pose_timeout.to_sec())
+                    self.printed_stale_warning = True
+                cmd = Twist()
+                self.cmd_pub.publish(cmd)
 
             if self.waypoints:
 

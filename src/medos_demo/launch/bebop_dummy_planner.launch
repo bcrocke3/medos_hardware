@@ -1,16 +1,22 @@
 <launch>
 
     <group ns="cairo_bebop">
-        <node name="bebop_dummy_planner" pkg="medos_demo" type="go1_dummy_path_planner.py" output="screen">
+    
+        <node name="bebop_dummy_planner" pkg="medos_demo" type="go1_dummy_path_planner.py">
             <rosparam file="$(find medos_demo)/maps/drone_waypoints.yaml" command="load" />
         </node>
 
         <node name="bebop_dummy_frontier_explorer" pkg="medos_demo" type="frontier_finder.py" output="screen">
             <rosparam file="$(find medos_demo)/maps/drone_frontier_list.yaml" command="load" />
         </node>
+
+        <!-- <node name="bebop_high_level_controller" pkg="medos_demo" type="high_level_controller.py" output="screen">
+            <param name="agent_type" value="SCOUT" />
+        </node> -->
+
     </group>
 
-    <node name="bebop_waypoint_controller" pkg="medos_demo" type="bebop_waypoint_controller.py" output="screen">
+    <node name="bebop_waypoint_controller" pkg="medos_demo" type="bebop_waypoint_controller.py">
     </node>
 
 </launch>
